@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Economart · Dashboard de Criativos</title>
+<link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+
+<!-- ── Header ── -->
+<div id="header">
+  <div class="header-inner">
+    <div class="header-top">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="logo">Economart<span> · Criativos</span></span>
+        <span style="color:#30363d">|</span>
+        <span id="headerPeriod" style="font-size:12px;color:#8b949e">—</span>
+      </div>
+    </div>
+    <div class="tabs" id="tabBar"></div>
+  </div>
+</div>
+
+<!-- ── Filter Bar ── -->
+<div id="filterBar">
+  <div class="filter-inner">
+    <div class="filter-row">
+      <div class="filter-group">
+        <span class="filter-label">Período Rápido</span>
+        <select class="filter-select" id="quickPeriod" onchange="onQuickChange()">
+          <option value="hoje">Hoje</option>
+          <option value="ontem">Ontem</option>
+          <option value="7d" selected>Últimos 7 dias</option>
+          <option value="14d">Últimos 14 dias</option>
+          <option value="30d">Últimos 30 dias</option>
+          <option value="mes">Este mês</option>
+          <option value="mesant">Mês passado</option>
+          <option value="custom">Personalizado</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">Data Inicial</span>
+        <input class="filter-date" type="date" id="startDate" onchange="onDateManual()"/>
+      </div>
+      <div class="filter-sep">—</div>
+      <div class="filter-group">
+        <span class="filter-label">Data Final</span>
+        <input class="filter-date" type="date" id="endDate" onchange="onDateManual()"/>
+      </div>
+      <button class="filter-btn" onclick="applyFilter()">Atualizar Painel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Content ── -->
+<div id="content">
+  <div class="loading"><div class="spinner"></div>Iniciando…</div>
+</div>
+
+<footer>Economart · Dashboard de Criativos · Dados via Meta Ads API + Supabase</footer>
+
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/tabs/categorias.js"></script>
+<script src="js/tabs/comunidade.js"></script>
+<script src="js/tabs/top.js"></script>
+<script src="js/tabs/orcamento.js"></script>
+<script src="js/tabs/tiktok.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
