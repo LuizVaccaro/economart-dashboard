@@ -31,12 +31,22 @@ const TABS = [
   { id: 'top', label: '🏆 Top Criativos' },
   { id: 'orcamento', label: '💰 Orçamento por Unidade' },
   { id: 'tiktok', label: 'TikTok Ads' },
+  { id: 'publico-tiktok', label: '👥 Público TikTok' },
+  { id: 'publico-meta', label: '👥 Público Meta' },
 ];
 
 let activeTab = 'categorias';
 
 async function renderTab(id) {
-  const fns = { categorias: tabCategorias, comunidade: tabComunidade, top: tabTop, orcamento: tabOrcamento, tiktok: tabTikTok };
+  const fns = {
+    categorias: tabCategorias,
+    comunidade: tabComunidade,
+    top: tabTop,
+    orcamento: tabOrcamento,
+    tiktok: tabTikTok,
+    'publico-tiktok': tabPublicoTikTok,
+    'publico-meta': tabPublicoMeta,
+  };
   try {
     await (fns[id] || tabCategorias)();
   } catch (e) {
