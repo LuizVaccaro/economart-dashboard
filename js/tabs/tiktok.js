@@ -1,5 +1,7 @@
 const TIKTOK_ACCOUNT_ID = '7405555951194963985';
 let __tiktokRows = [];
+let __tiktokInterestRows = [];
+let __tiktokInterestPeriod = null;
 
 const ttEsc = value => String(value == null ? '' : value)
   .replace(/&/g, '&amp;')
@@ -18,12 +20,27 @@ async function tabTikTok() {
     + '&platform=eq.tiktok&ad_account_id=eq.' + TIKTOK_ACCOUNT_ID
     + '&date=gte.' + S.start + '&date=lte.' + S.end;
 
-  const [insights, ads, adsets, campaigns] = await Promise.all([
+  const [insights, ads, adsets, campaigns, interestSnapshots] = await Promise.all([
     supa(insightPath),
     supa('ads?select=id,name,adset_id,campaign_id,creative_format,thumbnail_url,permalink_url&platform=eq.tiktok&ad_account_id=eq.' + TIKTOK_ACCOUNT_ID),
     supa('adsets?select=id,name,campaign_id&platform=eq.tiktok&ad_account_id=eq.' + TIKTOK_ACCOUNT_ID),
     supa('campaigns?select=id,name&platform=eq.tiktok&ad_account_id=eq.' + TIKTOK_ACCOUNT_ID),
+    supa('tiktok_audience_insights?select=period_start,period_end,dimension_name,impressions,clicks,spend,reach'
+      + '&advertiser_id=eq.' + TIKTOK_ACCOUNT_ID
+      + '&dimension=eq.interest_category'
+      + '&period_start=lte.' + S.end + '&period_end=gte.' + S.start
+      + '&order=period_end.desc,impressions.desc'),
   ]);
+
+  const latestSnapshot = interestSnapshots[0];
+  __tiktokInterestPeriod = latestSnapshot
+    ? { start: latestSnapshot.period_start, end: latestSnapshot.period_end }
+    : null;
+  __tiktokInterestRows = latestSnapshot
+    ? interestSnapshots
+      .filter(row => row.period_start === latestSnapshot.period_start && row.period_end === latestSnapshot.period_end)
+      .sort((a, b) => ttNum(b.impressions) - ttNum(a.impressions))
+    : [];
 
   const adById = Object.fromEntries(ads.map(row => [row.id, row]));
   const adsetById = Object.fromEntries(adsets.map(row => [row.id, row]));
@@ -113,6 +130,39 @@ function renderTikTokRows() {
       <td class="num">${fN(row.profile_visits)}</td>
     </tr>`).join('');
 
+  const interestRows = __tiktokInterestRows.slice(0, 10).map(row => {
+    const impressions = ttNum(row.impressions);
+    const clicks = ttNum(row.clicks);
+    const spend = ttNum(row.spend);
+    const ctr = impressions ? (clicks / impressions) * 100 : 0;
+    const cpm = impressions ? (spend / impressions) * 1000 : 0;
+    return `<tr>
+      <td><strong>${ttEsc(row.dimension_name)}</strong></td>
+      <td class="num strong">${fN(impressions)}</td>
+      <td class="num">${fN(clicks)}</td>
+      <td class="num">${ctr.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>
+      <td class="num">${fR(cpm)}</td>
+      <td class="num">${fR(spend)}</td>
+    </tr>`;
+  }).join('');
+
+  const interestSection = __tiktokInterestRows.length ? `
+    <div class="tiktok-audience-heading">
+      <div>
+        <h2>Interesses do público</h2>
+        <p>Snapshot de ${disp(__tiktokInterestPeriod.start)} a ${disp(__tiktokInterestPeriod.end)} · categorias podem se sobrepor e não devem ser somadas.</p>
+      </div>
+    </div>
+    <div class="table-wrap tiktok-table-wrap">
+      <table class="data-table">
+        <thead><tr>
+          <th>Categoria de interesse</th><th class="num th-tiktok">Impressões</th>
+          <th class="num">Cliques</th><th class="num">CTR</th><th class="num">CPM</th><th class="num">Investimento atribuído</th>
+        </tr></thead>
+        <tbody>${interestRows}</tbody>
+      </table>
+    </div>` : '';
+
   root.innerHTML = `
     <div class="tiktok-toolbar">
       <div class="filter-group"><span class="filter-label">Campanha</span>
@@ -145,5 +195,6 @@ function renderTikTokRows() {
         </tr></thead>
         <tbody>${tableRows}</tbody>
       </table>
-    </div>`;
+    </div>
+    ${interestSection}`;
 }

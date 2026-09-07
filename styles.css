@@ -172,6 +172,9 @@ body{
 .tiktok-hierarchy strong{display:block;font-size:12px;color:var(--text)}
 .tiktok-hierarchy span{display:block;font-size:11px;color:var(--faint);margin-top:3px}
 .kpi--tiktok{--accent:var(--tiktok)}
+.tiktok-audience-heading{display:flex;align-items:flex-end;justify-content:space-between;margin:28px 0 12px}
+.tiktok-audience-heading h2{margin:0 0 4px;font-size:18px}
+.tiktok-audience-heading p{margin:0;color:var(--faint);font-size:12px}
 
 .bar-cell{position:relative;isolation:isolate}
 .bar-cell::before{
