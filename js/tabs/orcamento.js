@@ -1,6 +1,6 @@
-// Aba de Orçamento por Unidade — combina gasto Meta (diário) com Google Ads
-// (puxada manual, granularidade mensal — o valor de cada mês é prorateado pelos
-// dias desse mês que caem dentro do período filtrado no topo).
+// Aba de Orçamento por Unidade — combina Meta e TikTok (diários) com Google Ads
+// (granularidade mensal — o valor de cada mês é prorateado pelos dias desse mês
+// que caem dentro do período filtrado no topo).
 function orcamentoRow(r, max) {
   const pct = max > 0 ? Number(r.total_spend) / max : 0;
   const araxaNote = r.unit_code === 'araxa' ? '<span class="tag">fora do rateio</span>' : '';
@@ -8,6 +8,7 @@ function orcamentoRow(r, max) {
     <tr>
       <td class="unit">${r.unit_name}${araxaNote}</td>
       <td class="num">${fR(r.meta_spend)}</td>
+      <td class="num">${fR(r.tiktok_spend)}</td>
       <td class="num">${fR(r.google_spend)}</td>
       <td class="num strong bar-cell" style="--pct:${pct.toFixed(4)}">${fR(r.total_spend)}</td>
     </tr>`;
@@ -27,6 +28,7 @@ function orcamentoStateBlock(state, label, rows) {
             <tr>
               <th>Unidade</th>
               <th class="num th-meta">Meta</th>
+              <th class="num th-tiktok">TikTok</th>
               <th class="num th-google">Google</th>
               <th class="num">Total</th>
             </tr>
@@ -53,13 +55,14 @@ async function tabOrcamento() {
 
   const grandTotal = rows.reduce((acc, r) => acc + Number(r.total_spend), 0);
   const metaTotal = rows.reduce((acc, r) => acc + Number(r.meta_spend), 0);
+  const tiktokTotal = rows.reduce((acc, r) => acc + Number(r.tiktok_spend), 0);
   const googleTotal = rows.reduce((acc, r) => acc + Number(r.google_spend), 0);
-  const rhRow = rh[0] || { meta_spend: 0, google_spend: 0, total_spend: 0 };
+  const rhRow = rh[0] || { meta_spend: 0, tiktok_spend: 0, google_spend: 0, total_spend: 0 };
 
   let html = `
     <div class="note">
-      <strong>Meta</strong> = dados diários da Edge Function ·
-      <strong>Google Ads</strong> = puxada manual com granularidade mensal
+      <strong>Meta e TikTok</strong> = dados diários sincronizados ·
+      <strong>Google Ads</strong> = sincronização mensal no dia 5
       (o valor de cada mês é prorateado pelos dias dentro do período filtrado)
     </div>
 
@@ -67,6 +70,10 @@ async function tabOrcamento() {
       <div class="kpi kpi--meta">
         <div class="kpi-label">Total Meta</div>
         <div class="kpi-value">${fR(metaTotal)}</div>
+      </div>
+      <div class="kpi kpi--tiktok">
+        <div class="kpi-label">Total TikTok</div>
+        <div class="kpi-value">${fR(tiktokTotal)}</div>
       </div>
       <div class="kpi kpi--google">
         <div class="kpi-label">Total Google</div>
@@ -84,6 +91,10 @@ async function tabOrcamento() {
         <div class="panel-stat">
           <span class="panel-stat-label">Meta</span>
           <span class="panel-stat-value">${fR(rhRow.meta_spend)}</span>
+        </div>
+        <div class="panel-stat">
+          <span class="panel-stat-label">TikTok</span>
+          <span class="panel-stat-value">${fR(rhRow.tiktok_spend)}</span>
         </div>
         <div class="panel-stat">
           <span class="panel-stat-label">Google</span>
@@ -105,7 +116,7 @@ async function tabOrcamento() {
       <div class="category-section">
         <div class="category-title">⚠️ Gasto não classificado</div>
         <div class="card">
-          ${unclassified.map(u => `<div style="font-size:12px;margin-bottom:6px">${u.platform === 'meta' ? '📘' : '🔍'} ${u.campaign_name}${u.adset_name ? ' / ' + u.adset_name : ''} — ${fR(u.spend)}</div>`).join('')}
+          ${unclassified.map(u => `<div style="font-size:12px;margin-bottom:6px">${u.platform === 'meta' ? '📘' : u.platform === 'tiktok' ? '🎵' : '🔍'} ${u.campaign_name}${u.adset_name ? ' / ' + u.adset_name : ''} — ${fR(u.spend)}</div>`).join('')}
         </div>
       </div>`;
   }
