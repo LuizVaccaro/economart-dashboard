@@ -1,5 +1,5 @@
 const OBJECTIVE_LABEL = {
-  alcance: 'Objetivo: Alcance',
+  alcance: 'Objetivo: Alcance do período',
   ig_profile: 'Objetivo: Acesso ao Perfil (IG)',
 };
 
@@ -26,10 +26,10 @@ function sortCategories(categories) {
 function quadrantCard(objectiveKey, row) {
   return `
     <div class="quad-card">
-      <div class="quad-title">${OBJECTIVE_LABEL[objectiveKey] || objectiveKey}</div>
+      <div class="quad-title">${esc(OBJECTIVE_LABEL[objectiveKey] || objectiveKey)}</div>
       ${row
         ? `${creativeHeader(row)}
-           <div class="quad-body">${platformToggleWidget(row, objectiveKey)}</div>`
+           <div class="quad-body">${metricsGridHtml(row, objectiveKey)}</div>`
         : '<div class="quad-empty">Sem dados no período</div>'}
     </div>`;
 }
@@ -38,7 +38,11 @@ async function tabCategorias() {
   loading();
   ensureCreativeModal();
 
-  const rows = await supaRpc('get_categorias_best_creatives', { p_start: S.start, p_end: S.end });
+  const rows = await supaRpc('get_categorias_best_ads', {
+    p_start: S.start,
+    p_end: S.end,
+    p_platform: bestContentPlatform,
+  });
 
   const categories = sortCategories([...new Set(rows.map(r => r.category))]);
   const byKey = {};
@@ -49,15 +53,15 @@ async function tabCategorias() {
     return;
   }
 
-  let html = '';
+  let html = bestContentPlatformToolbar(rows);
   for (const category of categories) {
     const states = [...new Set(rows.filter(r => r.category === category).map(r => r.state))].sort();
     html += `<div class="category-section">
-      <div class="category-title">${category}</div>`;
+      <div class="category-title">${esc(category)}</div>`;
     for (const state of states) {
       html += `
         <div class="state-row">
-          <div class="state-label">${state}</div>
+          <div class="state-label">${esc(state)}</div>
           <div class="grid-2">
             ${quadrantCard('alcance', byKey[`${category}||${state}||alcance`])}
             ${quadrantCard('ig_profile', byKey[`${category}||${state}||ig_profile`])}

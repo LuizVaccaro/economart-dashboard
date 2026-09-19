@@ -2,7 +2,7 @@
 
 Dashboard de Ads da Economart (Meta Ads, Google Ads e TikTok Ads) — frontend estático, servido via GitHub Pages.
 
-100% client-side: `index.html`/`js`/`styles.css` consultam o Supabase direto do navegador (anon key, RLS só-leitura) via `js/config.js`. Sem backend próprio neste repositório — a sincronização dos dados (Meta Graph API, TikTok, Google Ads) continua rodando como Supabase Edge Function + `pg_cron`, fora deste repo.
+O frontend é client-side: `index.html`/`js`/`styles.css` consultam o Supabase direto do navegador (anon key, RLS só-leitura) via `js/config.js`. As migrações SQL e Edge Functions mantidas pelo projeto também ficam versionadas neste repositório.
 
 ## Estrutura
 
@@ -19,8 +19,15 @@ js/
     top.js
     orcamento.js
     tiktok.js
+sql/              # migrações aplicadas ao Supabase
+supabase/
+  functions/      # Edge Functions de sincronização versionadas
 ```
 
 ## Origem
 
-Migrado do Netlify (deploy manual via `netlify-cli`) para GitHub Pages. Só a hospedagem do front mudou — banco (Supabase, projeto `economart-ads-dashboard`), Edge Function de sync e regras de rateio por unidade permanecem os mesmos.
+Migrado do Netlify para GitHub Pages. O banco e as rotinas de sincronização permanecem no Supabase (projeto `economart-ads-dashboard`).
+
+## Ranking de melhores anúncios
+
+As abas Categorias, Comunidade e Top Criativos classificam anúncios individuais (`ad_id`), com recálculo independente para Geral, Facebook e Instagram. Para alcance, o ranking usa o valor consolidado do período retornado pela Meta; quando esse snapshot ainda não existe, usa impressões como fallback e nunca soma alcances diários.

@@ -1,5 +1,11 @@
 // ── State ──
 let S = { start: '', end: '' };
+let bestContentPlatform = 'all';
+
+function setBestContentPlatform(platform) {
+  bestContentPlatform = ['all', 'facebook', 'instagram'].includes(platform) ? platform : 'all';
+  renderTab(activeTab);
+}
 
 function onQuickChange() {
   const v = document.getElementById('quickPeriod').value;
@@ -54,7 +60,7 @@ async function renderTab(id) {
       <div class="card" style="text-align:center;padding:40px">
         <div style="font-size:32px;margin-bottom:12px">⚠️</div>
         <div style="font-size:15px;font-weight:600;margin-bottom:8px">Erro ao carregar dados</div>
-        <div class="c-muted" style="font-size:13px">${e.message}</div>
+        <div class="c-muted" style="font-size:13px">${esc(e.message)}</div>
       </div>`;
   }
 }

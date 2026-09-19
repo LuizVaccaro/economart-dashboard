@@ -257,7 +257,7 @@ body{
 /* ── Miniatura do criativo ── */
 .thumb{
   position:relative;flex-shrink:0;border-radius:9px;overflow:hidden;cursor:pointer;
-  background:var(--inset-2);border:1px solid var(--border);
+  background:var(--inset-2);border:1px solid var(--border);padding:0;color:inherit;font:inherit;
   display:flex;align-items:center;justify-content:center;
   transition:box-shadow .18s var(--ease),border-color .18s var(--ease)
 }
@@ -305,6 +305,16 @@ body{
 }
 .platform-toggle-btn:hover{color:var(--text);background:#ffffff9c}
 .platform-toggle-btn.active{background:var(--surface);color:var(--brand);box-shadow:var(--shadow-xs);font-weight:700}
+
+.best-content-toolbar{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  margin-bottom:10px;padding:12px 14px;background:var(--surface);
+  border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-xs)
+}
+.best-content-toolbar-title{font-size:13px;font-weight:700;color:var(--text)}
+.best-content-toolbar-copy{font-size:11px;color:var(--faint);margin-top:3px}
+.best-content-platform-toggle{width:min(100%,390px);flex-shrink:0}
+.best-content-method-note{margin-bottom:18px}
 
 /* ── Top criativos ── */
 .top-row{
@@ -376,6 +386,8 @@ body{
   .audience-grid{grid-template-columns:1fr}
 }
 @media(max-width:560px){
+  .best-content-toolbar{align-items:stretch;flex-direction:column}
+  .best-content-platform-toggle{width:100%}
   .stat-list{grid-template-columns:1fr}
   .hero-row{grid-template-columns:1fr}
   .audience-bar-row{grid-template-columns:92px 1fr 62px;gap:8px}

@@ -22,6 +22,24 @@ const fR = n => n!=null && !isNaN(n) ? 'R$ '+Number(n).toLocaleString('pt-BR',{m
 
 const PLATFORM_LABEL = { instagram: '📷 Instagram', facebook: '📘 Facebook' };
 
+function esc(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeHttpsUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    return url.protocol === 'https:' ? url.href : '';
+  } catch (_) {
+    return '';
+  }
+}
+
 function loading() {
   document.getElementById('content').innerHTML = `<div class="loading"><div class="spinner"></div>Carregando dados…</div>`;
 }
@@ -52,12 +70,24 @@ function ensureCreativeModal() {
 
 function showCreative(name, thumb, managerUrl) {
   ensureCreativeModal();
-  document.getElementById('modalAdName').textContent = name;
+  document.getElementById('modalAdName').textContent = String(name || 'Criativo');
   const content = document.getElementById('modalContent');
   const link    = document.getElementById('modalLink');
-  if (managerUrl && managerUrl.includes('ads.tiktok.com/ad_preview_tool')) {
+  const safeManagerUrl = safeHttpsUrl(managerUrl);
+  const safeThumb = safeHttpsUrl(thumb);
+  let managerHost = '';
+  let managerPath = '';
+  if (safeManagerUrl) {
+    const parsed = new URL(safeManagerUrl);
+    managerHost = parsed.hostname.toLowerCase();
+    managerPath = parsed.pathname;
+  }
+  const isTikTokPreview = managerHost === 'ads.tiktok.com' && managerPath.startsWith('/ad_preview_tool');
+  const isInstagramPost = (managerHost === 'instagram.com' || managerHost.endsWith('.instagram.com')) && managerPath.startsWith('/p/');
+
+  if (isTikTokPreview) {
     const frame = document.createElement('iframe');
-    frame.src = managerUrl;
+    frame.src = safeManagerUrl;
     frame.width = '100%';
     frame.height = '720';
     frame.frameBorder = '0';
@@ -65,36 +95,46 @@ function showCreative(name, thumb, managerUrl) {
     frame.style.cssText = 'border-radius:8px;background:#000;max-width:480px';
     content.innerHTML = '';
     content.appendChild(frame);
-    link.href = managerUrl;
+    link.href = safeManagerUrl;
     link.textContent = 'Abrir preview no TikTok →';
-  } else if (managerUrl && managerUrl.includes('instagram.com/p/')) {
-    const shortcode = managerUrl.match(/instagram\.com\/p\/([^/?#]+)/)?.[1];
+  } else if (isInstagramPost) {
+    const shortcode = managerPath.match(/^\/p\/([A-Za-z0-9_-]+)/)?.[1];
     if (shortcode) {
       content.innerHTML = '<iframe src="https://www.instagram.com/p/' + shortcode + '/embed/?autoplay=false" width="100%" height="780" frameborder="0" scrolling="yes" allowtransparency="true" style="border-radius:8px;background:#000;max-width:480px"></iframe>';
     } else {
       content.innerHTML = '<div class="modal-fallback">Preview não disponível</div>';
     }
-    link.href = managerUrl.split('#')[0];
+    link.href = safeManagerUrl.split('#')[0];
     link.textContent = 'Abrir no Instagram →';
-  } else if (thumb) {
+  } else if (safeThumb) {
     const img = document.createElement('img');
-    img.src = thumb;
+    img.src = safeThumb;
     img.style.cssText = 'width:100%;display:block;border-radius:4px';
     img.onerror = () => { content.innerHTML = '<div class="modal-fallback">Thumbnail indisponível</div>'; };
     content.innerHTML = '';
     content.appendChild(img);
-    link.href = managerUrl || 'https://business.facebook.com';
+    link.href = safeManagerUrl || 'https://business.facebook.com';
     link.textContent = 'Abrir no Gerenciador →';
   } else {
     content.innerHTML = '<div class="modal-fallback">Preview não disponível</div>';
-    link.href = managerUrl || '#';
+    link.href = safeManagerUrl || '#';
     link.textContent = 'Abrir no Gerenciador →';
   }
   document.getElementById('creativeModal').style.display = 'flex';
 }
 
-function safeAttr(s) {
-  return (s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '').replace(/\r/g, '');
+window.__creativePreviewData = window.__creativePreviewData || {};
+let __creativePreviewCounter = 0;
+
+function registerCreativePreview(name, thumb, managerUrl) {
+  const id = `creative-preview-${__creativePreviewCounter++}`;
+  window.__creativePreviewData[id] = { name, thumb, managerUrl };
+  return id;
+}
+
+function showCreativeById(id) {
+  const data = window.__creativePreviewData[id];
+  if (data) showCreative(data.name, data.thumb, data.managerUrl);
 }
 
 // Miniatura pequena e nítida (estilo Gerenciador de Anúncios) com selo de play —
@@ -102,14 +142,15 @@ function safeAttr(s) {
 function previewThumb(name, thumb, managerUrl, size) {
   size = size || 56;
   const badge = Math.max(18, Math.round(size * 0.3));
-  const onclick = "showCreative('" + safeAttr(name) + "','" + safeAttr(thumb) + "','" + safeAttr(managerUrl) + "')";
+  const previewId = registerCreativePreview(name, thumb, managerUrl);
+  const safeThumb = safeHttpsUrl(thumb);
   return `
-    <div class="thumb" onclick="${onclick}" style="width:${size}px;height:${size}px">
-      ${thumb
-        ? `<img src="${thumb}" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display='none'"/>`
+    <button type="button" class="thumb" onclick="event.stopPropagation();showCreativeById('${previewId}')" aria-label="Abrir preview de ${esc(name)}" style="width:${size}px;height:${size}px">
+      ${safeThumb
+        ? `<img src="${esc(safeThumb)}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block" onerror="this.style.display='none'"/>`
         : '<span class="thumb-empty">Sem preview</span>'}
       <span class="thumb-play" style="width:${badge}px;height:${badge}px;font-size:${Math.round(badge * 0.42)}px">&#x25B6;</span>
-    </div>`;
+    </button>`;
 }
 
 // ── Widget de métricas com alternância Geral / Facebook / Instagram ──
@@ -128,10 +169,11 @@ function metricsGridHtml(data, objectiveKey) {
     return '<div class="quad-empty">Sem dados nessa plataforma</div>';
   }
   const isProfile = objectiveKey === 'ig_profile';
-  const heroLabel = isProfile ? 'Visitas ao perfil' : 'Alcance';
-  const heroValue = fN(isProfile ? data.profile_visits : data.reach);
+  const usesImpressionFallback = !isProfile && data.reach_is_period_unique === false;
+  const heroLabel = isProfile ? 'Visitas ao perfil' : (usesImpressionFallback ? 'Impressões' : 'Alcance do período');
+  const heroValue = fN(isProfile ? data.profile_visits : (usesImpressionFallback ? data.impressions : data.reach));
   const secondary = isProfile
-    ? statRow('Alcance', fN(data.reach))
+    ? statRow(data.reach_is_period_unique === false ? 'Impressões' : 'Alcance do período', fN(data.reach_is_period_unique === false ? data.impressions : data.reach))
     : statRow('Visitas ao perfil', fN(data.profile_visits));
 
   return `
@@ -152,6 +194,28 @@ function metricsGridHtml(data, objectiveKey) {
       ${statRow('Thruplay', fN(data.thruplay))}
       ${statRow('Comentários', fN(data.comments))}
       ${statRow('Curtidas', fN(data.likes))}
+    </div>`;
+}
+
+function bestContentPlatformToolbar(rows) {
+  const labels = { all: 'Geral', facebook: '📘 Facebook', instagram: '📷 Instagram' };
+  const exact = rows.length > 0 && rows.every(row => row.reach_is_period_unique !== false);
+  return `
+    <div class="best-content-toolbar">
+      <div>
+        <div class="best-content-toolbar-title">Melhor anúncio do período</div>
+        <div class="best-content-toolbar-copy">O vencedor é recalculado para a plataforma selecionada.</div>
+      </div>
+      <div class="platform-toggle best-content-platform-toggle">
+        ${Object.entries(labels).map(([key, label]) => `
+          <button class="platform-toggle-btn${bestContentPlatform === key ? ' active' : ''}"
+            onclick="setBestContentPlatform('${key}')">${label}</button>`).join('')}
+      </div>
+    </div>
+    <div class="note best-content-method-note">
+      ${exact
+        ? '<strong>Ranking comparável ao Gerenciador:</strong> um anúncio por grupo, usando métricas consolidadas do período.'
+        : '<strong>Período ainda sem snapshot consolidado:</strong> o ranking de alcance usa impressões como fallback. O alcance diário não é somado.'}
     </div>`;
 }
 
@@ -185,8 +249,8 @@ function creativeHeader(row, size) {
     <div class="quad-header">
       ${previewThumb(row.creative_name, row.thumbnail_url, row.permalink_url, size || 76)}
       <div class="quad-id">
-        <div class="quad-creative-name">${row.creative_name}</div>
-        ${row.creative_format ? `<div class="quad-format">${row.creative_format}</div>` : ''}
+        <div class="quad-creative-name">${esc(row.creative_name)}</div>
+        ${row.creative_format ? `<div class="quad-format">${esc(row.creative_format)}</div>` : ''}
       </div>
     </div>`;
 }

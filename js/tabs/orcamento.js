@@ -6,7 +6,7 @@ function orcamentoRow(r, max) {
   const araxaNote = r.unit_code === 'araxa' ? '<span class="tag">fora do rateio</span>' : '';
   return `
     <tr>
-      <td class="unit">${r.unit_name}${araxaNote}</td>
+      <td class="unit">${esc(r.unit_name)}${araxaNote}</td>
       <td class="num">${fR(r.meta_spend)}</td>
       <td class="num">${fR(r.tiktok_spend)}</td>
       <td class="num">${fR(r.google_spend)}</td>
@@ -21,7 +21,7 @@ function orcamentoStateBlock(state, label, rows) {
   const max = Math.max(...stateRows.map(r => Number(r.total_spend)));
   return `
     <div class="category-section">
-      <div class="category-title">${label} <span class="c-muted" style="font-weight:400;font-size:12px">— total ${fR(subtotal)}</span></div>
+      <div class="category-title">${esc(label)} <span class="c-muted" style="font-weight:400;font-size:12px">— total ${fR(subtotal)}</span></div>
       <div class="table-wrap" style="overflow-x:auto">
         <table class="data-table">
           <thead>
@@ -116,7 +116,7 @@ async function tabOrcamento() {
       <div class="category-section">
         <div class="category-title">⚠️ Gasto não classificado</div>
         <div class="card">
-          ${unclassified.map(u => `<div style="font-size:12px;margin-bottom:6px">${u.platform === 'meta' ? '📘' : u.platform === 'tiktok' ? '🎵' : '🔍'} ${u.campaign_name}${u.adset_name ? ' / ' + u.adset_name : ''} — ${fR(u.spend)}</div>`).join('')}
+          ${unclassified.map(u => `<div style="font-size:12px;margin-bottom:6px">${u.platform === 'meta' ? '📘' : u.platform === 'tiktok' ? '🎵' : '🔍'} ${esc(u.campaign_name)}${u.adset_name ? ' / ' + esc(u.adset_name) : ''} — ${fR(u.spend)}</div>`).join('')}
         </div>
       </div>`;
   }
