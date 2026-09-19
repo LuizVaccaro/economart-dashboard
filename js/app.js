@@ -38,7 +38,7 @@ const TABS = [
   { id: 'orcamento', label: '💰 Orçamento por Unidade' },
   { id: 'tiktok', label: 'TikTok Ads' },
   { id: 'publico-tiktok', label: '👥 Público TikTok' },
-  { id: 'publico-meta', label: '👥 Público Meta' },
+  { id: 'publico-meta', label: '👥 Públicos Meta' },
 ];
 
 let activeTab = 'categorias';

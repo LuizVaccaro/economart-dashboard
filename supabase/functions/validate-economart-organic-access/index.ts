@@ -91,6 +91,29 @@ Deno.serve(async (req: Request) => {
         }));
         Object.assign(metricTests, Object.fromEntries(tested));
       }
+      const audienceMetricNames = [
+        "follower_demographics",
+        "reached_audience_demographics",
+        "engaged_audience_demographics",
+      ];
+      const audienceBreakdowns = ["age", "gender", "city", "country"];
+      const audienceTests: Record<string, unknown> = {};
+      const audienceResults = await Promise.all(audienceMetricNames.flatMap((metric) =>
+        audienceBreakdowns.map(async (breakdown) => {
+          const key = `${metric}:${breakdown}`;
+          const result = await graph(`${ig.id}/insights`, {
+            metric,
+            period: "lifetime",
+            metric_type: "total_value",
+            breakdown,
+            timeframe: "this_month",
+          }, pageToken);
+          return [key, outcome(result, result.ok ? {
+            data: result.data?.data ?? [],
+          } : {})];
+        })
+      ));
+      Object.assign(audienceTests, Object.fromEntries(audienceResults));
       instagram = {
         profile: outcome(profile, profile.ok ? {
           username: profile.data?.username,
@@ -105,6 +128,7 @@ Deno.serve(async (req: Request) => {
           has_sample: Boolean(sample),
         } : {}),
         media_insights: metricTests,
+        audience_insights: audienceTests,
       };
     }
 
