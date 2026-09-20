@@ -4,6 +4,8 @@ Dashboard de Ads da Economart (Meta Ads, Google Ads e TikTok Ads) — frontend e
 
 O frontend é client-side: `index.html`/`js`/`styles.css` consultam o Supabase direto do navegador (anon key, RLS só-leitura) via `js/config.js`. As migrações SQL e Edge Functions mantidas pelo projeto também ficam versionadas neste repositório.
 
+A aba **Públicos Meta** separa mídia paga e Instagram orgânico. Na visão orgânica, além do perfil demográfico dos seguidores, o dashboard mostra os totais consolidados do período, a evolução diária disponível e a tabela de posts com alcance e engajamento. A função `sync-economart-instagram-content` atualiza esses dados diariamente no Supabase.
+
 ## Estrutura
 
 ```

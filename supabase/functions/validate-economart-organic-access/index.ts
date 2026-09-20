@@ -76,7 +76,7 @@ Deno.serve(async (req: Request) => {
         fields: "id,username,followers_count,media_count",
       }, pageToken);
       const media = await graph(`${ig.id}/media`, {
-        fields: "id,media_type,timestamp,permalink,like_count,comments_count",
+        fields: "id,media_type,timestamp,permalink,like_count,comments_count,thumbnail_url,media_url,insights.metric(reach,saved,shares,total_interactions,views)",
         limit: "1",
       }, pageToken);
       const sample = media.data?.data?.[0];
@@ -114,6 +114,29 @@ Deno.serve(async (req: Request) => {
         })
       ));
       Object.assign(audienceTests, Object.fromEntries(audienceResults));
+      const since = new Date(Date.now() - 29 * 86400000).toISOString().slice(0, 10);
+      const until = new Date().toISOString().slice(0, 10);
+      const accountMetricTests: Record<string, unknown> = {};
+      const accountMetrics = [
+        ["reach", "time_series"],
+        ["follower_count", "time_series"],
+        ["views", "total_value"],
+        ["total_interactions", "total_value"],
+        ["website_clicks", "total_value"],
+        ["profile_views", "total_value"],
+        ["follows_and_unfollows", "total_value"],
+      ];
+      const accountResults = await Promise.all(accountMetrics.map(async ([metric, metricType]) => {
+        const result = await graph(`${ig.id}/insights`, {
+          metric,
+          period: "day",
+          metric_type: metricType,
+          since,
+          until,
+        }, pageToken);
+        return [metric, outcome(result, result.ok ? { data: result.data?.data ?? [] } : {})];
+      }));
+      Object.assign(accountMetricTests, Object.fromEntries(accountResults));
       instagram = {
         profile: outcome(profile, profile.ok ? {
           username: profile.data?.username,
@@ -129,6 +152,7 @@ Deno.serve(async (req: Request) => {
         } : {}),
         media_insights: metricTests,
         audience_insights: audienceTests,
+        account_content_insights: accountMetricTests,
       };
     }
 
