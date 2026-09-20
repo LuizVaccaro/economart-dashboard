@@ -1,5 +1,5 @@
 const META_ACCOUNT_ID = '103801426';
-let metaAudienceMode = 'paid';
+let metaAudienceMode = 'instagram';
 let metaAudienceRows = [];
 let metaAudienceSnapshot = null;
 
@@ -118,7 +118,7 @@ function renderInstagramContent(content) {
     </tr>`;
   }).join('');
 
-  return `<section class="organic-content-section">
+  const summary = `<section class="organic-content-section">
     <div class="organic-section-heading">
       <div><h2>Conteúdo orgânico do Instagram</h2><p>${disp(S.start)} → ${disp(S.end)}</p></div>
       <span class="organic-source-badge">Instagram API</span>
@@ -128,6 +128,8 @@ function renderInstagramContent(content) {
       : '<div class="note"><strong>Período ainda não sincronizado:</strong> os totais aparecem após a próxima coleta diária. Os posts já disponíveis continuam listados abaixo.</div>'}
     <div class="organic-kpi-grid">${cards}</div>
     <div class="organic-data-note">Alcance, visualizações, interações, cliques e visitas são totais consolidados do período. Novos seguidores usa a série diária da Meta${followerLatestDate ? `, disponível até ${disp(followerLatestDate)}` : ''}.</div>
+  </section>`;
+  const posts = `<section class="organic-posts-section">
     <div class="organic-posts-card">
       <div class="organic-posts-title">Posts orgânicos (${disp(S.start)} → ${disp(S.end)}) <span>${content.media.length} publicações</span></div>
       <div class="organic-table-scroll">
@@ -138,6 +140,7 @@ function renderInstagramContent(content) {
       </div>
     </div>
   </section>`;
+  return { summary, posts };
 }
 
 async function loadInstagramContent() {
@@ -159,20 +162,18 @@ function renderInstagramAudience(rows, latest, content) {
     .sort((a, b) => b.value - a.value);
   const cities = rows.filter(row => row.dimension === 'city').map(toAudienceRow)
     .sort((a, b) => b.value - a.value).slice(0, 15);
-  const followers = Number(latest.followers_count || 0);
+  const organicContent = renderInstagramContent(content);
 
   document.getElementById('content').innerHTML = `${metaAudienceToolbar()}
     <div class="note"><strong>Público orgânico · Instagram</strong> · Snapshot de ${disp(latest.snapshot_date)} da conta @${esc(latest.username)}.</div>
-    <div class="kpi-row audience-section">
-      <div class="kpi kpi--instagram"><div class="kpi-label">Seguidores do Instagram</div><div class="kpi-value">${fN(followers)}</div></div>
-    </div>
+    ${organicContent.summary}
     <div class="audience-caveat"><strong>Base de seguidores:</strong> esta visão mostra o perfil demográfico atual dos seguidores e não varia com o filtro de período do dashboard.</div>
     <div class="audience-grid audience-section">
       <section class="audience-card"><div class="audience-card-title">Seguidores por idade</div>${audienceBarRows(ages, 'value', 'is-instagram')}</section>
       <section class="audience-card"><div class="audience-card-title">Seguidores por gênero</div>${audienceBarRows(genders, 'value', 'is-instagram')}</section>
     </div>
     <section class="audience-card audience-section"><div class="audience-card-title">Principais cidades dos seguidores</div>${audienceBarRows(cities, 'value', 'is-instagram')}</section>
-    ${renderInstagramContent(content)}`;
+    ${organicContent.posts}`;
 }
 
 async function tabPublicoMeta() {

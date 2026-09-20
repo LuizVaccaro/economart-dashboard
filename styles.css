@@ -218,6 +218,7 @@ body{
 .organic-kpi--purple{--organic-accent:#8b5cf6}.organic-kpi--orange{--organic-accent:#ea6a2a}.organic-kpi--red{--organic-accent:#e63c58}
 .organic-sparkline{position:absolute;left:18px;right:18px;bottom:12px;width:calc(100% - 36px);height:38px;overflow:visible}
 .organic-data-note{font-size:11.5px;color:var(--dim);line-height:1.5;margin:10px 1px 16px}
+.organic-posts-section{margin-top:24px}
 .organic-posts-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
 .organic-posts-title{font-size:13px;font-weight:750;padding:15px 18px;border-bottom:1px solid var(--border);background:var(--inset)}
 .organic-posts-title span{font-size:11px;font-weight:550;color:var(--faint);margin-left:7px}
