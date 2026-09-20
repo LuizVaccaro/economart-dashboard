@@ -94,10 +94,10 @@ function renderInstagramContent(content) {
   const cards = [
     organicKpi('Alcance', hasPeriod ? metricMap.reach : null, 'green', organicSparkline(content.daily, 'reach', '#169447')),
     organicKpi('Novos seguidores', newFollowers, 'blue', organicSparkline(content.daily, 'follower_count', '#2563eb')),
-    organicKpi('Visualizações', hasPeriod ? metricMap.views : null, 'indigo', ''),
-    organicKpi('Interações', hasPeriod ? metricMap.total_interactions : null, 'purple', ''),
-    organicKpi('Cliques no link', hasPeriod ? metricMap.website_clicks : null, 'orange', ''),
-    organicKpi('Visitas ao perfil', hasPeriod ? metricMap.profile_views : null, 'red', ''),
+    organicKpi('Visualizações', hasPeriod ? metricMap.views : null, 'indigo', organicSparkline(content.daily, 'views', '#4f46e5')),
+    organicKpi('Interações', hasPeriod ? metricMap.total_interactions : null, 'purple', organicSparkline(content.daily, 'total_interactions', '#8b5cf6')),
+    organicKpi('Cliques no link', hasPeriod ? metricMap.website_clicks : null, 'orange', organicSparkline(content.daily, 'website_clicks', '#ea6a2a')),
+    organicKpi('Visitas ao perfil', hasPeriod ? metricMap.profile_views : null, 'red', organicSparkline(content.daily, 'profile_views', '#e63c58')),
   ].join('');
 
   const rows = content.media.map(post => {

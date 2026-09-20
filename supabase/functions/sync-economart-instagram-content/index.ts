@@ -136,7 +136,7 @@ Deno.serve(async (req: Request) => {
       metric: "follower_count", period: "day", metric_type: "time_series",
       since: addDays(today, -30), until: today,
     }, pageToken);
-    const dailyRows = [...reachReports, followerReport].flatMap((daily) =>
+    const timeSeriesRows = [...reachReports, followerReport].flatMap((daily) =>
       (daily.data ?? []).flatMap((metric: any) =>
         (metric.values ?? []).map((item: any) => ({
           profile_id: profileId,
@@ -147,6 +147,22 @@ Deno.serve(async (req: Request) => {
         }))
       )
     );
+    const dailyTotalMetrics = ["views", "total_interactions", "website_clicks", "profile_views"];
+    const dailyTotalDates = Array.from({ length: 30 }, (_, index) => addDays(today, index - 30));
+    const dailyTotalReports = await Promise.all(dailyTotalDates.map(async (date) => {
+      const report = await graph(`${profileId}/insights`, {
+        metric: dailyTotalMetrics.join(","), period: "day", metric_type: "total_value",
+        since: date, until: addDays(date, 1),
+      }, pageToken);
+      return dailyTotalMetrics.map((metric) => ({
+        profile_id: profileId,
+        date,
+        metric,
+        value: metricValue(report.data ?? [], metric),
+        synced_at: syncedAt,
+      }));
+    }));
+    const dailyRows = [...timeSeriesRows, ...dailyTotalReports.flat()];
 
     const mediaSince = addDays(today, -93);
     const media = await graphAll(`${profileId}/media`, {
@@ -178,7 +194,7 @@ Deno.serve(async (req: Request) => {
     });
 
     const { error: cleanupError } = await db.from("instagram_account_insights_daily")
-      .delete().eq("profile_id", profileId).in("metric", ["reach", "follower_count"])
+      .delete().eq("profile_id", profileId).in("metric", ["reach", "follower_count", ...dailyTotalMetrics])
       .gte("date", reachSince).lte("date", today);
     if (cleanupError) throw cleanupError;
     const { error: periodCleanupError } = await db.from("instagram_account_insights_period")
