@@ -86,6 +86,7 @@ function organicMediaType(type) {
 
 function renderInstagramContent(content) {
   const metricMap = Object.fromEntries(content.period.map(row => [row.metric, Number(row.value || 0)]));
+  const periodDays = Math.round((new Date(`${S.end}T12:00:00`) - new Date(`${S.start}T12:00:00`)) / 86400000) + 1;
   const followerRows = content.daily.filter(row => row.metric === 'follower_count');
   const newFollowers = followerRows.length ? followerRows.reduce((sum, row) => sum + Number(row.value || 0), 0) : null;
   const followerLatestDate = followerRows.length ? followerRows.map(row => row.date).sort().at(-1) : null;
@@ -122,7 +123,9 @@ function renderInstagramContent(content) {
       <div><h2>Conteúdo orgânico do Instagram</h2><p>${disp(S.start)} → ${disp(S.end)}</p></div>
       <span class="organic-source-badge">Instagram API</span>
     </div>
-    ${hasPeriod ? '' : '<div class="note"><strong>Período ainda não sincronizado:</strong> os totais aparecem após a próxima coleta diária. Os posts já disponíveis continuam listados abaixo.</div>'}
+    ${hasPeriod ? '' : periodDays > 30
+      ? '<div class="note"><strong>Totais disponíveis para até 30 dias:</strong> a Meta limita as métricas consolidadas do Instagram a esse intervalo. Reduza o período para ver os indicadores; os posts continuam listados abaixo.</div>'
+      : '<div class="note"><strong>Período ainda não sincronizado:</strong> os totais aparecem após a próxima coleta diária. Os posts já disponíveis continuam listados abaixo.</div>'}
     <div class="organic-kpi-grid">${cards}</div>
     <div class="organic-data-note">Alcance, visualizações, interações, cliques e visitas são totais consolidados do período. Novos seguidores usa a série diária da Meta${followerLatestDate ? `, disponível até ${disp(followerLatestDate)}` : ''}.</div>
     <div class="organic-posts-card">
